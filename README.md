@@ -16,7 +16,7 @@ username= user in the account
 
 username = user - client. It is an email address
 
-Example: https://api.adboss.io/v1/posts?key=AIzaSyDkxV8TFM9vP-CTiQlh6-a-8foq_ruKJXU&username={{username}}
+Example: https://api.adboss.io/v1/posts?key={{key}}&username={{username}}
 
 Result:
 
