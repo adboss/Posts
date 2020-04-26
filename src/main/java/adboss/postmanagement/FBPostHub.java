@@ -67,12 +67,13 @@ public PostsList getPagePosts(String username) {
 		String creationDate;
 		String ATPage;
 		try {
-			FBPage page = new FBPage();
+			FBPage page = new FBPage(username);
 			ATPage = page.getATPage();
 			
 		
 			RawAPIResponse resPage = facebook.callGetAPI(idPage + "/feed?fields=id,from,created_time,message,parent_id,type,status_type&access_token=" + ATPage);
 			JSONObject jsonObjectPage = resPage.asJSONObject();
+			log.info(jsonObjectPage.toString());
 			
 			int numPosts = jsonObjectPage.getJSONArray("data").length();
 			for (int i = 0; i < numPosts; i++) {

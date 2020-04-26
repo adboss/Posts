@@ -1,8 +1,10 @@
 package adboss.postmanagement;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,11 +13,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
+
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.mybusiness.v4.MyBusiness;
 import com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.Reviews.UpdateReply;
+import com.google.api.services.mybusiness.v4.model.Account;
+import com.google.api.services.mybusiness.v4.model.ListAccountsResponse;
+import com.google.api.services.mybusiness.v4.model.ListLocationsResponse;
 import com.google.api.services.mybusiness.v4.model.ListReviewsResponse;
+import com.google.api.services.mybusiness.v4.model.Location;
 import com.google.api.services.mybusiness.v4.model.Review;
 import com.google.api.services.mybusiness.v4.model.ReviewReply;
 
@@ -33,6 +41,11 @@ public class GMBPostHub {
 	protected Writer W = new StringWriter();
 	static JsonFactory JSON_FACTORY = new JacksonFactory();
 	private static MyBusiness mybusiness;
+	
+	public GMBPostHub() throws ClassNotFoundException, SQLException, ServletException, IOException {
+		GMB gmb = new GMB();
+		mybusiness = gmb.getMyBusiness();
+	}
 	
 	public PostsList sendGOPostsList(String username, PostsList postsList, String idFather) throws Exception {
 		log.info(postsList.getString());
@@ -102,8 +115,10 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 	public static List<Review> listReviews(String username) throws Exception {
 		List<Review> reviews = new ArrayList<Review>();
 		
-		DB db = new DB();
-		String locationName = db.getGMBLocation(username);
+		//DB db = new DB();
+		//String locationName = db.getGMBLocation(username);
+		String locationName = "accounts/103268190540206787281/locations/11239012911156423308";
+		log.info(locationName);
 		if (locationName != null) {
 			
 			MyBusiness.Accounts.Locations.Reviews.List reviewsList = 
@@ -209,9 +224,60 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 		return post;
 	}
 	
+	public static List<Account> listAccounts() throws Exception {
+		
+		MyBusiness.Accounts.List accountsList = mybusiness.accounts().list();
+		ListAccountsResponse response = accountsList.execute();
+		List<Account> accounts = response.getAccounts();
 
+	  for (Account account : accounts) {
+	    System.out.println(account.toPrettyString());
+	  }
+	  return accounts;
+	}
+	
+	public static List<Location> listLocations(String accountName) throws Exception {
+		
+		com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.List locationsList =
+				mybusiness.accounts().locations().list(accountName);
+		ListLocationsResponse responses = locationsList.execute();  
+		List<Location> locations = responses.getLocations();
+		//locations = responses.getLocations(); //borrar si no estás probando
+			  
+		while (responses.getNextPageToken() != null){
+			locationsList.setPageToken(responses.getNextPageToken());
+			responses = locationsList.execute();
+			locations.addAll(responses.getLocations());
+		} 
+			  
+		return locations;
+	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		GMB gmb = new GMB();
+				
+		List<Account> acc = gmb.listAccounts();
+		int len2 = acc.size();
+		System.out.println(len2);
+		for (int i = 0; i < len2; i++) {
+			System.out.println("Account: " + acc.get(i).getAccountName());
+			System.out.println("LocationId: " + acc.get(i).getAccountNumber());
+			System.out.println("LocationId: " + acc.get(i).getName());
+			System.out.println("LocationId: " + acc.get(i).getPermissionLevel());
+			System.out.println("LocationId: " + acc.get(i).getRole());
+		}
+		
+	
+		List<Location> listLoc = listLocations("accounts/103268190540206787281");
+		//List<Location> listLoc = gmb.listLocations(accountJumberStores);
+		
+		int len = listLoc.size();
+		System.out.println(len);
+		for (int i = 0; i < len; i++) {
+			System.out.println("Location: " + listLoc.get(i).getLocationName());
+			System.out.println("LocationId: " + listLoc.get(i).getName());
+			
+		}
 		
 
 	}
