@@ -343,6 +343,16 @@ public class TWPostHub {
 		return postslist;
 		
 	}
+	
+	public boolean itHasTW(String username) throws ClassNotFoundException, SQLException, ServletException, IOException {
+		DB dB = new DB();
+		boolean itHas =false;
+		String TWuserName = dB.getATT(username);
+		if ((TWuserName != null) && (!TWuserName.equals(""))) {	
+			itHas =true;
+		} 
+		return itHas;
+	}
 
 	public static void main(String[] args) {
 		

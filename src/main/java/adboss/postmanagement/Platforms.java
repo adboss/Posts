@@ -13,6 +13,7 @@ package adboss.postmanagement;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -238,67 +239,68 @@ public class Platforms {
 	}
 
 
-
-	public Post sendPost_old(String username, Post post) throws ClassNotFoundException, SQLException, ServletException, IOException, FacebookException, TwitterException, JSONException {
-		boolean isSentFB = false;
-		boolean isSentTwitter = false;
-		JsonObject SentPostStatus = new JsonObject();
-		FBPostHub fb = new FBPostHub();
-		FBPage page = new FBPage();
-		TWPostHub tw = new TWPostHub();
-		if (this.itHasFB(username)) {
-			isSentFB = fb.sendPostFB(username,post.getPost());
-			SentPostStatus.addProperty("StatusFB", String.valueOf(isSentFB));
-		}
-		if (this.itHasTW(username)) {
-			post = tw.sendPostTW(username, post);
-		}
-		return post;
-	}
-	
-	public Post sendPost(String username, Post post) throws ClassNotFoundException, SQLException, ServletException, IOException, FacebookException, TwitterException, JSONException {
-		String platform = post.getPlatform();
-		
-		if (platform.equals("Facebook")) {
-			if (this.itHasFB(username)) {
-				FBPostHub fb = new FBPostHub();
-				post = fb.sendPagePostFB(username, post);
-			} 
-		} 
-		if (platform.equals("Google")) {
-			//TODO log.info("Falta por desarrollar el envío de mensajes a Google");
-		} 
-		return post;
-	}
 	
 	
 	public PostsList sendPosts(String username, PostsList postsList) throws Exception {
-		log.info(postsList.getString());
 		
 		DB db = new DB();
 		String web = db.getWebName(username);
 		postsList.addFinalText(web);
-		
+		log.info(postsList.getString());
 		TWPostHub tw = new TWPostHub();
 		PostsList newPostsList = tw.sendTWPostsList(username, postsList, null);
 		
 		GMBPostHub gmb = new GMBPostHub();
 		newPostsList = gmb.sendGOPostsList(username, postsList, null);
+		
+		FBPostHub fb = new FBPostHub(username);
+		newPostsList = fb.sendFBPostsList(username, postsList, null);
 			
 		PostsList postsListNew = new PostsList();	
-		
-		Iterator<Post> iter = postsList.iterator();
-		while (iter.hasNext()) {
-			Post post = iter.next();
-			sendPost(username, post);
-			postsListNew.add(post);
-		}
 		
 		postsListNew.registerPosts(username);
 		log.info(postsListNew.getString());
 		
 		return postsListNew;
 	}
+	
+	public PostsList getPosts(String username) throws ClassNotFoundException, SQLException, ServletException, IOException, ParseException, Exception {
+		FB fb = new FB();
+		
+		Platforms plat = new Platforms();
+		PostsList posts = new PostsList();
+		
+		if (plat.itHasFB(username)) {
+			Facebook facebook = fb.getFacebook(username);
+			FBPostHub page = new FBPostHub(username);
+			PostsList postsFB = page.getPagePosts(username);
+			posts.mergePostsList(postsFB);
+			log.info(posts.getString());
+		}
+		
+		if (plat.itHasTW(username)) {
+			TWPostHub twHub = new TWPostHub();
+			PostsList postsTW = twHub.getTWPosts(username);
+			posts.mergePostsList(postsTW);
+		}
+		
+		if (plat.itHasGO(username)) {
+			GMBPostHub goHub = new GMBPostHub();
+			PostsList postsGO = goHub.getGMBPosts(username);
+			posts.mergePostsList(postsGO);
+			
+		}
+		FilterUser filter = new FilterUser();
+		posts = filter.applyFilter(posts, username);
+		
+		posts = posts.sortPosts(posts);
+		DBRegisteredPosts regPosts = new DBRegisteredPosts();
+		regPosts.checkAndSend(posts, username);
+		
+		return posts;
+	}
+	
+	
 	
 	
 	

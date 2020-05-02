@@ -190,12 +190,21 @@ public class PostsList extends ArrayList<Post> {
 	}
 	
 	public void addFinalText(String finalText) {
+		int finalTextLen = finalText.length();
 		Iterator<Post> iter = this.iterator();
 		while (iter.hasNext()) {
 			Post post = (Post) iter.next();
 			String msg = post.getPost();
 			int lenMsg = msg.length();
-			String last = msg.substring(lenMsg -21, lenMsg);
+			String last = "";
+			
+			if (lenMsg < finalTextLen) {
+				last = msg;
+			} else {
+				last = msg.substring(lenMsg -finalTextLen, lenMsg);
+			}
+			
+			
 			if (!last.equals(finalText)) {
 				post.addFinalText(finalText);
 				changePost(post);

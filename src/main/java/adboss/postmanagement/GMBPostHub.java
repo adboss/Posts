@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -21,8 +22,10 @@ import com.google.api.services.mybusiness.v4.MyBusiness;
 import com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.Reviews.UpdateReply;
 import com.google.api.services.mybusiness.v4.model.Account;
 import com.google.api.services.mybusiness.v4.model.ListAccountsResponse;
+import com.google.api.services.mybusiness.v4.model.ListLocalPostsResponse;
 import com.google.api.services.mybusiness.v4.model.ListLocationsResponse;
 import com.google.api.services.mybusiness.v4.model.ListReviewsResponse;
+import com.google.api.services.mybusiness.v4.model.LocalPost;
 import com.google.api.services.mybusiness.v4.model.Location;
 import com.google.api.services.mybusiness.v4.model.Review;
 import com.google.api.services.mybusiness.v4.model.ReviewReply;
@@ -48,13 +51,12 @@ public class GMBPostHub {
 	}
 	
 	public PostsList sendGOPostsList(String username, PostsList postsList, String idFather) throws Exception {
-		log.info(postsList.getString());
+		
 		PostsList goPosts = new PostsList();
 		goPosts = goPosts.identifyPlatformPosts(postsList, "Google");
 		
 		PostsList newPosts = new PostsList();
 		newPosts = newPosts.identifyNewPosts(goPosts);
-		log.info(accountName);
 		
 		newPosts = sendNewPosts(username, newPosts, idFather);
 		
@@ -89,17 +91,28 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 
 	public static Post sendPost(Post post, String username) throws Exception {
 		
+		DB db = new DB();
+		String parent = db.getGMBLocation(username);
 		ReviewReply content = new ReviewReply();
 		content.setComment(post.getPost());
 		String name = post.getFatherId();
 		if (name.equals("-1")) {
+			LocalPost content2 = new LocalPost();
+			content2.setSummary(post.getPost());
+			LocalPost publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
 			
 		} else {
+			
 			UpdateReply rev = 
 					mybusiness.accounts().locations().reviews().updateReply(name, content);
-			
 			post.setId(rev.getName());
 			ReviewReply response = rev.execute();
+			
+			LocalPost content2 = new LocalPost();
+			
+			content2.setSummary(post.getPost());
+			LocalPost publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
+			
 		}
 		
 		
@@ -224,6 +237,46 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 		return post;
 	}
 	
+	public PostsList getGMBPosts(String username) throws ClassNotFoundException, SQLException, ServletException, IOException, ParseException {
+		PostsList posts = new PostsList();
+		
+		DB db = new DB();
+		String parent = db.getGMBLocation(username);
+		ListLocalPostsResponse publicacions = mybusiness.accounts().locations().localPosts().list(parent).execute();
+		
+		List<LocalPost> localPosts = publicacions.getLocalPosts();
+		Iterator<LocalPost> iter = localPosts.iterator();
+		while (iter.hasNext()) {
+			LocalPost localPost = iter.next();
+			Post post = new Post();
+			post.setAnswerON(false);
+			
+			String sDate = localPost.getCreateTime();
+			//String sDate = "2020-05-01T16:54:18.135Z";
+			sDate = sDate.substring(0, 10) + " " + sDate.substring(11, 19);
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			post.setDateCreation(format.parse(sDate));
+			
+			post.setFatherId("-1");
+			post.setId(localPost.getCreateTime() + localPost.getState());
+			post.setPlatform("Google");
+			post.setPost(localPost.getSummary());
+			
+			Location location = mybusiness.accounts().locations().get(parent).execute();
+			post.setStatus(location.getLocationName());
+			post.setName(location.getLocationName());
+			post.setVisibleWithParent(true);
+			PostsList sons = new PostsList();
+			sons.setPostsList("[]");
+			post.setSons(sons);		
+			
+			posts.add(post);
+		
+		}
+		log.info(posts.getString());
+		return posts;
+	}
+	
 	public static List<Account> listAccounts() throws Exception {
 		
 		MyBusiness.Accounts.List accountsList = mybusiness.accounts().list();
@@ -252,8 +305,25 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 			  
 		return locations;
 	}
+	
+	
+	public boolean itHasGO(String username) throws ClassNotFoundException, SQLException, ServletException, IOException {
+		DB dB = new DB();
+		boolean itHas = false;
+		String GOuserName = dB.getATG(username);
+		if ((GOuserName != null) && (!GOuserName.equals(""))) {
+			itHas =true;
+		} 
+		return itHas;
+	}
+	
 
 	public static void main(String[] args) throws Exception {
+		
+		String sDate = "2020-05-01T16:54:18.135Z";
+		sDate = sDate.substring(0, 10) + " " + sDate.substring(11, 19);
+		log.info(sDate);
+		
 		GMB gmb = new GMB();
 				
 		List<Account> acc = gmb.listAccounts();

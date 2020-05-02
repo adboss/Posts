@@ -22,9 +22,8 @@ public class DBRegisteredPosts extends DB {
 		msg = msg.replace("'", "");
 		String SQL = "INSERT INTO " + db 
 				+ " VALUES ('" + id + "', '" + platform + "', '" + msg + "', '" + username + "')";
-		log.info(SQL);
+		
 		SQL = q.cleanString(SQL);
-		log.info(SQL);
 		Execute(SQL);
 	}
 	
@@ -47,7 +46,7 @@ public class DBRegisteredPosts extends DB {
 	}
 	
 	public void checkAndSend(PostsList posts, String username) throws Exception {
-		log.info("size: " + posts.size());
+		
 		Iterator<Post> iter = posts.iterator();
 		DB db = new DB();
 		String TWUserName = db.getTWUserName(username);
@@ -60,7 +59,6 @@ public class DBRegisteredPosts extends DB {
 			String platform = post.getPlatform();
 			String msg = post.getPost();
 			
-			log.info(post.getName() + " | " + username + " | " + msg);
 			if (post.getName().equals(TWUserName)
 					//|| post.getName().equals(FBUserName)
 					|| post.getName().equals(GOUserName)
@@ -71,7 +69,7 @@ public class DBRegisteredPosts extends DB {
 					PostsList postsList = new PostsList();
 					postsList.add(post);
 					pt.sendPosts(username, postsList);
-					log.info("send: " + id + " | " + msg + " | " + platform);
+					
 				}
 			}
 		}
@@ -87,7 +85,6 @@ public class DBRegisteredPosts extends DB {
 			String msg = post.getPost();
 			if ((!rp.isInside(id, platform, username)) && 
 					(post.getName().equals("adboss"))) {
-				log.info("entra: " +  id + " | " + post.getName());
 				rp.addPost(id, platform, msg, username);
 			}
 			
@@ -96,7 +93,7 @@ public class DBRegisteredPosts extends DB {
 	}
 
 	private Iterator<?> iterator() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 

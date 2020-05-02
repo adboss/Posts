@@ -3,6 +3,7 @@ package adboss.posts.v1;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -21,9 +22,11 @@ import adboss.postmanagement.TWPostHub;
 import facebook4j.Facebook;
 import facebook4j.FacebookException;
 import facebook4j.internal.org.json.JSONException;
+import io.adboss.dataconnection.DB;
 import io.adboss.platforms.FB;
 import io.adboss.platforms.GMB;
 import io.adboss.platforms.TW;
+import io.adboss.utils.qreah;
 import twitter4j.TwitterException;
 
 /**
@@ -50,43 +53,24 @@ public class Posts extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 		String username = request.getParameter("username");
+		Platforms pt = new Platforms();
 		
-		FB fb = new FB();
-		TW tw = new TW();
-		
-		Platforms plat = new Platforms();
-		PostsList posts = new PostsList();
 		
 		try {
 			
-			if (plat.itHasFB(username)) {
-				Facebook facebook = fb.getFacebook(username);
-				FBPostHub page = new FBPostHub();
-				PostsList postsFB = page.getPagePosts(username);
-				posts.mergePostsList(postsFB);
-			}
+			PostsList posts = pt.getPosts(username);
 			
-			if (plat.itHasTW(username)) {
-				TWPostHub twHub = new TWPostHub();
-				PostsList postsTW = twHub.getTWPosts(username);
-				posts.mergePostsList(postsTW);
-			}
-			
-			if (plat.itHasGO(username)) {
-				GMBPostHub goHub = new GMBPostHub();
-				PostsList postsGO = goHub.getGOReviews(username);
-				posts.mergePostsList(postsGO);
-			}
 			FilterUser filter = new FilterUser();
 			posts = filter.applyFilter(posts, username);
-			
 			posts = posts.sortPosts(posts);
+			
 			DBRegisteredPosts regPosts = new DBRegisteredPosts();
 			regPosts.checkAndSend(posts, username);
-			//log.info("Valencia Ordenado: " + posts.getString());
+			
 			out.write(posts.getString());
 			
 						
@@ -107,8 +91,25 @@ public class Posts extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
+		
+		response.setContentType("text/html");
+		PrintWriter out = response.getWriter();
+		String username = request.getParameter("username");
+		qreah q = new qreah();
+		String data = q.postUTF8Message(request);
+		log.info(data);
+		PostsList postsList = new PostsList();
+		
+		try {
+			postsList.setPostsList(data);
+			Platforms pt = new Platforms();
+			postsList = pt.sendPosts(username, postsList);
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		out.write(postsList.getString());
 	}
 
 	/**
