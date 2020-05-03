@@ -258,7 +258,6 @@ public class Platforms {
 			
 		PostsList postsListNew = new PostsList();	
 		
-		postsListNew.registerPosts(username);
 		log.info(postsListNew.getString());
 		
 		return postsListNew;
@@ -295,7 +294,7 @@ public class Platforms {
 		
 		posts = posts.sortPosts(posts);
 		DBRegisteredPosts regPosts = new DBRegisteredPosts();
-		regPosts.checkAndSend(posts, username);
+		regPosts.checkAndSend2(posts, username);
 		
 		return posts;
 	}

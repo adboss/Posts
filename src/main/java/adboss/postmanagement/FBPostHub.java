@@ -86,14 +86,14 @@ public class FBPostHub {
 				ATPage = page.getATPage();
 				
 			
-				RawAPIResponse resPage = facebook.callGetAPI(idPage + "/feed?fields=id,from,created_time,message,parent_id,status_type,attachments,media_type&access_token=" + ATPage);
+				RawAPIResponse resPage = facebook.callGetAPI(idPage + "/feed?fields=id,from,created_time,message,parent_id,status_type,media_type&access_token=" + ATPage);
 				JSONObject jsonObjectPage = resPage.asJSONObject();
 				log.info(jsonObjectPage.toString());
 				
 				int numPosts = jsonObjectPage.getJSONArray("data").length();
 				for (int i = 0; i < numPosts; i++) {
 					
-					if ((jsonObjectPage.getJSONArray("data").getJSONObject(i).getString("attachments") == null) || (jsonObjectPage.getJSONArray("data").getJSONObject(i).getString("media_type").equals("link"))) {
+					if (true) {
 						id = jsonObjectPage.getJSONArray("data").getJSONObject(i).getString("id");
 						msg = jsonObjectPage.getJSONArray("data").getJSONObject(i).getString("message");
 						
@@ -254,7 +254,8 @@ public class FBPostHub {
 			}
 			
 			post.setStatus("old");
-			
+			DBRegisteredPosts rp = new DBRegisteredPosts();
+			rp.addPost(post.getId(), "Facebook", post.getPost(), username);
 			newList.add(post);
 		}
 		

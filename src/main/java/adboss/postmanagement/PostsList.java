@@ -257,23 +257,7 @@ public class PostsList extends ArrayList<Post> {
 		return this.toJSONArray().toString();
 	}
 	
-	public void registerPosts(String username) throws ClassNotFoundException, SQLException, ServletException, IOException {
-		DBRegisteredPosts rp = new DBRegisteredPosts();
-		Iterator<?> iter = this.iterator();
-		while (iter.hasNext()) {
-			Post post = (Post) iter.next();
-			String id = post.getId();
-			String platform = post.getPlatform();
-			String msg = post.getPost();
-			if ((!rp.isInside(id, platform, username)) && 
-					(post.getName().equals("adboss"))) {
-				log.info("entra: " +  id + " | " + post.getName());
-				rp.addPost(id, platform, msg, username);
-			}
-			
-		}
-		
-	}
+	
 	
 	public static void main(String[] args) {
 		String msg = "Esto es una prueba 2http://www.adarga.org";

@@ -96,10 +96,11 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 		ReviewReply content = new ReviewReply();
 		content.setComment(post.getPost());
 		String name = post.getFatherId();
+		LocalPost publicacion = new LocalPost();
 		if (name.equals("-1")) {
 			LocalPost content2 = new LocalPost();
 			content2.setSummary(post.getPost());
-			LocalPost publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
+			publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
 			
 		} else {
 			
@@ -111,9 +112,12 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 			LocalPost content2 = new LocalPost();
 			
 			content2.setSummary(post.getPost());
-			LocalPost publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
+			publicacion = mybusiness.accounts().locations().localPosts().create(parent, content2).execute();
 			
 		}
+		
+		DBRegisteredPosts rp = new DBRegisteredPosts();
+		rp.addPost(publicacion.getName(), "Google", publicacion.getSummary(), username);
 		
 		
 		return post;
@@ -258,7 +262,7 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 			post.setDateCreation(format.parse(sDate));
 			
 			post.setFatherId("-1");
-			post.setId(localPost.getCreateTime() + localPost.getState());
+			post.setId(localPost.getName());
 			post.setPlatform("Google");
 			post.setPost(localPost.getSummary());
 			

@@ -124,7 +124,8 @@ public class TWPostHub {
 			
 			post.setId(Long.toString(newId));
 			post.setStatus("old");
-			
+			DBRegisteredPosts rp = new DBRegisteredPosts();
+			rp.addPost(post.getId(), "Facebook", post.getPost(), username);
 			newList.add(post);
 		}
 		
