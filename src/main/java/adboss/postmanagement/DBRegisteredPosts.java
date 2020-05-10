@@ -6,7 +6,9 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -29,6 +31,24 @@ public class DBRegisteredPosts extends DB {
 				+ " VALUES ('" + id + "', '" + platform + "', '" + msg + "', '" + username + "')";
 		
 		SQL = q.cleanString(SQL);
+		Execute(SQL);
+	}
+	
+	public void addPost(List<Rows> rows, String username) throws ClassNotFoundException, SQLException, ServletException, IOException {
+		qreah q = new qreah();
+		String SQL = "INSERT INTO " + db + "(id, platform, msg, username) VALUES";
+		Iterator<Rows> iter = rows.iterator();
+		while (iter.hasNext()) {
+			Rows row = iter.next();
+			String id = row.getId();
+			String platform = row.getPlatform();
+			String msg = row.getMsg();
+			msg = q.cleanString(msg).replace("\"", "");
+			SQL = SQL + " ('" + id + "', '" + platform + "', \"" + msg + "\", '" + username + "'),";
+		}
+		SQL = SQL.substring(0, SQL.length()-1);
+		SQL = q.cleanString(SQL);
+		log.info(SQL);
 		Execute(SQL);
 	}
 	
@@ -58,7 +78,7 @@ public class DBRegisteredPosts extends DB {
 		String FBUserName = db.getFBUserName(username);
 		String GOUserName = db.getGOUserName(username);
 		PostsList postsList = new PostsList();
-		
+		List<Rows> rows = new ArrayList<Rows>();
 		while (iter.hasNext()) {
 			Post post = iter.next();
 			String id = post.getId();
@@ -76,36 +96,41 @@ public class DBRegisteredPosts extends DB {
 					Post FBPost = new Post();
 					Post TWPost = new Post();
 					Post GMBPost = new Post();
+					Rows r = new Rows();
 					switch(platform) {
 					  case "Facebook":
 						TWPost = createTWPost(post);
 						GMBPost = createGMBPost(post);
 						postsList.add(TWPost);
 						postsList.add(GMBPost);
-						addPost(TWPost.getId(), TWPost.getPlatform(), 
-								TWPost.getPost(), username);
-						addPost(GMBPost.getId(), GMBPost.getPlatform(), 
-								GMBPost.getPost(), username);
+						
+						r.setId(id);
+						r.setMsg(msg);
+						r.setPlatform(platform);
+						rows.add(r);
+						
 					    break;
 					  case "Twitter":
 						FBPost = createFBPost(post);
 						GMBPost = createGMBPost(post);
 						postsList.add(FBPost);
 						postsList.add(GMBPost);
-						addPost(FBPost.getId(), FBPost.getPlatform(), 
-								FBPost.getPost(), username);
-						addPost(GMBPost.getId(), GMBPost.getPlatform(), 
-								GMBPost.getPost(), username);
+						
+						r.setId(id);
+						r.setMsg(msg);
+						r.setPlatform(platform);
+						rows.add(r);
 					    break;
 					  case "Google":
 						FBPost = createFBPost(post);
 						TWPost = createTWPost(post);
 						postsList.add(FBPost);
 						postsList.add(TWPost);
-						addPost(FBPost.getId(), FBPost.getPlatform(), 
-								FBPost.getPost(), username);
-						addPost(TWPost.getId(), TWPost.getPlatform(), 
-								TWPost.getPost(), username);
+						
+						r.setId(id);
+						r.setMsg(msg);
+						r.setPlatform(platform);
+						rows.add(r);
 						break;
 					  default:
 					   
@@ -116,9 +141,14 @@ public class DBRegisteredPosts extends DB {
 				}
 			}
 		}
-		Platforms pt = new Platforms();
-		log.info("posts to send: " + postsList.getString());
-		//pt.sendPosts(username, postsList);
+		
+		if (!rows.isEmpty()) {
+			addPost (rows, username);
+			Platforms pt = new Platforms();
+			log.info("posts to send: " + postsList.getString());
+			pt.sendPosts(username, postsList);
+		}
+		
 	}
 	
 	/**
@@ -133,15 +163,17 @@ public class DBRegisteredPosts extends DB {
 		String TWUserName = db.getTWUserName(username);
 		String FBUserName = db.getFBUserName(username);
 		String GOUserName = db.getGOUserName(username);
+		log.info(TWUserName + " | " + FBUserName  + " | " + GOUserName);
 		PostsList postsList = new PostsList();
-		log.info("before: " + posts.getString());
+		//log.info("before: " + posts.getString());
+		List<Rows> rows = new ArrayList<Rows>();
 		Iterator<Post> iter = posts.iterator();
 		while (iter.hasNext()) {
 			Post post = iter.next();
 			String id = post.getId();
 			String platform = post.getPlatform();
 			String msg = post.getPost();
-			
+			log.info(post.getName() + " | " + platform);
 			if (post.getName().equals(TWUserName)
 					|| post.getName().equals(FBUserName)
 					|| post.getName().equals(GOUserName)
@@ -149,13 +181,21 @@ public class DBRegisteredPosts extends DB {
 				
 				if (!isInside(id, platform, username)) {
 					log.info("Yes! " + id + " | " + platform);
-					addPost(id, platform, msg, username);
+					Rows r = new Rows();
+					r.setId(id);
+					r.setMsg(msg);
+					r.setPlatform(platform);
+					rows.add(r);
 				}
 			}
 		}
-		Platforms pt = new Platforms();
-		log.info("posts to send: " + postsList.getString());
-		//pt.sendPosts(username, postsList);
+		if (!rows.isEmpty()) {
+			addPost (rows, username);
+			Platforms pt = new Platforms();
+			log.info("posts to send: " + postsList.getString());
+			//pt.sendPosts(username, postsList);
+		}
+		
 	}
 	
 	
@@ -220,11 +260,13 @@ public class DBRegisteredPosts extends DB {
 		
 		return null;
 	}
+	
+	
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException, ServletException, IOException {
 		
-		boolean b = new DBRegisteredPosts().isInside("Atlassian con una base de clientes Fortune 500 es un seguro en estos tiempos de crisis especialmente para las Pymes   http://www.adarga.org", "Facebook", "rafael@adarga.org");
-		log.info("result: " + b);
+		//boolean b = new DBRegisteredPosts().isInside("Atlassian con una base de clientes Fortune 500 es un seguro en estos tiempos de crisis especialmente para las Pymes   http://www.adarga.org", "Facebook", "rafael@adarga.org");
+		//log.info("result: " + b);
 		
 		/*
 		String post = "Adarga";
@@ -237,6 +279,11 @@ public class DBRegisteredPosts extends DB {
 			log.info("ko");
 		}
 		*/
+		
+		String SQL = "I don't want to eat";
+		SQL = SQL.replace("'", "\'");
+		log.info(SQL);
+				
 		
 		
 	}

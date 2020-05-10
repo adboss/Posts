@@ -289,12 +289,13 @@ public class Platforms {
 			posts.mergePostsList(postsGO);
 			
 		}
+		
 		FilterUser filter = new FilterUser();
 		posts = filter.applyFilter(posts, username);
 		
 		posts = posts.sortPosts(posts);
 		DBRegisteredPosts regPosts = new DBRegisteredPosts();
-		regPosts.checkAndSend2(posts, username);
+		regPosts.checkAndSend(posts, username);
 		
 		return posts;
 	}

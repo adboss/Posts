@@ -246,7 +246,7 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 		
 		DB db = new DB();
 		String parent = db.getGMBLocation(username);
-		ListLocalPostsResponse publicacions = mybusiness.accounts().locations().localPosts().list(parent).execute();
+		ListLocalPostsResponse publicacions = mybusiness.accounts().locations().localPosts().list(parent).setPageSize(5).execute();
 		
 		List<LocalPost> localPosts = publicacions.getLocalPosts();
 		Iterator<LocalPost> iter = localPosts.iterator();

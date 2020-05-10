@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import io.adboss.dataconnection.DB;
 import io.adboss.platforms.FBPage;
+import twitter4j.Paging;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
@@ -125,7 +126,7 @@ public class TWPostHub {
 			post.setId(Long.toString(newId));
 			post.setStatus("old");
 			DBRegisteredPosts rp = new DBRegisteredPosts();
-			rp.addPost(post.getId(), "Facebook", post.getPost(), username);
+			rp.addPost(post.getId(), "Twitter", post.getPost(), username);
 			newList.add(post);
 		}
 		
@@ -310,7 +311,12 @@ public class TWPostHub {
 		cb.setOAuthAccessTokenSecret(ATTSecret);
 		TwitterFactory tf = new TwitterFactory(cb.build());
 		twitter = tf.getInstance(); 
-		List<Status> statuses = twitter.getHomeTimeline();
+		
+		Paging paging = new Paging();
+		paging.setCount(5);
+		List<Status> statuses =twitter.getHomeTimeline(paging);
+		
+		//List<Status> statuses = twitter.getHomeTimeline();
 		PostsList postslist = new PostsList();
 		
 		Iterator<Status> iter = statuses.iterator();
@@ -318,7 +324,8 @@ public class TWPostHub {
 		while (iter.hasNext()) {
 			Status status = iter.next();
 			
-			/* log.info("Id: " + status.getId());
+			log.info("Id: " + status.getId() + " | " + "post: " + status.getText());
+			/*
 			log.info("getInReplyToStatusId: " + status.getInReplyToStatusId());
 			log.info("getInReplyToUserId: " + status.getInReplyToUserId());
 			*/

@@ -16,6 +16,7 @@ import facebook4j.Facebook;
 import facebook4j.FacebookException;
 import facebook4j.FacebookFactory;
 import facebook4j.RawAPIResponse;
+import facebook4j.Reading;
 import facebook4j.ResponseList;
 import facebook4j.auth.AccessToken;
 import facebook4j.internal.org.json.JSONArray;
@@ -24,6 +25,7 @@ import facebook4j.internal.org.json.JSONObject;
 import io.adboss.dataconnection.DB;
 import io.adboss.platforms.FB;
 import io.adboss.platforms.FBPage;
+import io.adboss.utils.qreah;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
@@ -84,11 +86,13 @@ public class FBPostHub {
 			try {
 				FBPage page = new FBPage(username);
 				ATPage = page.getATPage();
-				
-			
-				RawAPIResponse resPage = facebook.callGetAPI(idPage + "/feed?fields=id,from,created_time,message,parent_id,status_type,media_type&access_token=" + ATPage);
+				qreah q = new qreah();
+				String until = q.today();
+				String since = q.addDays(until, -7);
+				String timeLimit = "&since=" + since + "&until=" + until;
+				RawAPIResponse resPage = facebook.callGetAPI(idPage + "/feed?fields=id,from,created_time,message,parent_id,status_type,media_type&access_token=" + ATPage + timeLimit);
 				JSONObject jsonObjectPage = resPage.asJSONObject();
-				log.info(jsonObjectPage.toString());
+				//log.info(jsonObjectPage.toString());
 				
 				int numPosts = jsonObjectPage.getJSONArray("data").length();
 				for (int i = 0; i < numPosts; i++) {
@@ -311,11 +315,19 @@ public class FBPostHub {
 		return post;
 	}
 	
+	/**
+	 *  This function is not used
+	 */
+	
 	public PostsList getFBPosts(String username) throws ClassNotFoundException, ServletException, IOException, SQLException, FacebookException {
 		PostsList postslist = new PostsList();
 		
 		FB fbDC = new FB(); 
 		Facebook facebook = fbDC.getFacebook(username);
+		String pageId = new FBPage().getIdPage(username);
+		String api = "/" + pageId + "/posts" + "&since=2020-04-01&until=2020-05-04";
+		RawAPIResponse res = facebook.callGetAPI(api);
+		log.info(res.asString());
 		ResponseList<facebook4j.Post> feed = facebook.getFeed();
 		/*
 		 * To get Feed from a Facebook Page you have to code this:
@@ -360,8 +372,12 @@ public class FBPostHub {
 	}
 	
 
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) throws ParseException {
+		qreah q = new qreah();
+		String until = q.today();
+		String since = q.addDays(until, -7);
+		String timeLimit = "&since=" + since + "&until=" + until;
+		log.info(timeLimit);
 
 	}
 
