@@ -323,7 +323,7 @@ public PostsList sendNewPosts(String username, PostsList posts, String idFather)
 	
 
 	public static void main(String[] args) throws Exception {
-		
+			
 		String sDate = "2020-05-01T16:54:18.135Z";
 		sDate = sDate.substring(0, 10) + " " + sDate.substring(11, 19);
 		log.info(sDate);

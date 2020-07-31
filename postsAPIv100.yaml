@@ -1,0 +1,57 @@
+  swagger: '2.0'
+  info:
+    title: Posts
+    description: Send and receive messages from main Internet platforms (Google, Facebook, Twitter)
+    version: 1.0.0
+  host: apiadbosscloudrun-hd3cizjvcq-ew.a.run.app
+  
+  
+  basePath: /
+  schemes:
+    - https
+  
+  produces:
+    - application/json
+  x-google-backend:
+    address: https://posts-dot-apiadboss.ew.r.appspot.com/
+    jwt_audience: 200681927673-o6cas7k09gp0h3nkr6912ft3ancrlc37.apps.googleusercontent.com
+  paths:
+    /v1/posts:
+      get:
+        summary: Get posts from Internet platforms
+        operationId: getposts
+        responses:
+          '200':
+            description: A successful response
+            schema:
+              type: string
+        security:
+          - api_key: []
+      post:
+        summary: Send posts to the online platforms
+        operationId: postSend
+        responses:
+          '200':
+            description: A successful response
+            schema:
+              type: string
+        security:
+        - api_key: []
+    /v1/web:
+      post:
+        summary: Send email
+        operationId: postSend
+        responses:
+          '200':
+            description: A successful response
+            schema:
+              type: string
+        security:
+        - api_key: []
+
+  securityDefinitions:
+    # This section configures basic authentication with an API key.
+    api_key:
+      type: "apiKey"
+      name: "key"
+      in: "query"
